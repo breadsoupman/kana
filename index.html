@@ -34,12 +34,18 @@
     padding:28px 26px 30px; box-shadow:0 12px 40px rgba(0,0,0,.10);
     margin:auto;   /* 置中但內容過高時可往上捲,鍵盤彈出也不會擋住上方 */
   }
-  /* 螢幕變矮(手機鍵盤彈出)時縮小,確保題號等資訊看得到 */
-  @media (max-height:680px){
-    .card{padding:16px 18px 18px}
-    .kana{font-size:76px !important; margin:6px 0 0 !important}
-    h1{font-size:20px}
-  }
+  /* 手機鍵盤彈出(可視高度變小)時,自動壓縮排版,讓題號/答對數看得到 */
+  body.compact{padding:8px; align-items:flex-start}
+  body.compact .card{margin:0 auto; padding:12px 16px 14px}
+  body.compact .sub, body.compact .hint{display:none}
+  body.compact h1{font-size:18px; margin:2px 0}
+  body.compact .bar{margin:7px 0 4px}
+  body.compact .kana{font-size:52px; margin:2px 0 0}
+  body.compact #speak{margin:2px auto; padding:5px 14px; font-size:13px}
+  body.compact input{padding:10px; font-size:19px}
+  body.compact .msg{min-height:16px; margin:5px 0 2px; font-size:14px}
+  body.compact .answer{min-height:14px; font-size:13px}
+  body.compact button{margin-top:8px; padding:11px; font-size:16px}
   h1{font-size:24px; text-align:center; margin:6px 0 4px}
   .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:22px}
   .top{display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--muted)}
@@ -332,6 +338,19 @@ $("ans").addEventListener("keydown", e=>{
     else check();
   }
 });
+
+// 手機鍵盤彈出時,可視高度變小 → 切換壓縮版排版,確保上方題號/答對數看得到
+function fitViewport(){
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.body.classList.toggle("compact", vh < 640);
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize", fitViewport);
+  window.visualViewport.addEventListener("scroll", fitViewport);
+}
+window.addEventListener("resize", fitViewport);
+window.addEventListener("orientationchange", fitViewport);
+fitViewport();
 
 showHome();
 </script>
