@@ -25,12 +25,20 @@
   body{
     font-family:system-ui,-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;
     background:var(--bg); color:var(--text);
-    display:flex; align-items:center; justify-content:center; padding:20px;
+    display:flex; justify-content:center; padding:20px;
+    min-height:100vh; min-height:100dvh;
   }
   .card{
     background:var(--card); border:1px solid var(--border);
     border-radius:20px; width:100%; max-width:460px;
     padding:28px 26px 30px; box-shadow:0 12px 40px rgba(0,0,0,.10);
+    margin:auto;   /* 置中但內容過高時可往上捲,鍵盤彈出也不會擋住上方 */
+  }
+  /* 螢幕變矮(手機鍵盤彈出)時縮小,確保題號等資訊看得到 */
+  @media (max-height:680px){
+    .card{padding:16px 18px 18px}
+    .kana{font-size:76px !important; margin:6px 0 0 !important}
+    h1{font-size:20px}
   }
   h1{font-size:24px; text-align:center; margin:6px 0 4px}
   .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:22px}
@@ -65,13 +73,27 @@
   button.ghost:hover{background:transparent; color:var(--accent-d); border-color:var(--accent-d)}
   button.small{width:auto; display:block; margin:2px auto 4px; padding:8px 18px; font-size:14px}
   button.pink{background:var(--pink)} button.pink:hover{background:var(--pink-d)}
+  button.doba{background:#c98a3a} button.doba:hover{background:#b2762c}
   .choose big{display:block; font-size:40px; font-weight:700; margin-bottom:2px}
+  /* どば 頁面 */
+  #doba{
+    position:relative; border-radius:14px; overflow:hidden;
+    background:#333 center/cover no-repeat; background-image:url('doba.jpg');
+    min-height:62vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-end;
+    padding:28px 20px; text-align:center;
+  }
+  #doba::before{content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.45))}
+  #doba > *{position:relative; z-index:1}
+  #dobaBack{width:auto; padding:12px 22px; background:rgba(255,255,255,.92); color:#2a2a2a}
+  #dobaBack:hover{background:#fff}
   .hint{text-align:center; color:var(--muted); font-size:12.5px; margin-top:14px}
   .result{text-align:center}
   .score{font-size:64px; font-weight:800; margin:8px 0 0}
   .score small{font-size:22px; color:var(--muted); font-weight:600}
   .grade{font-size:19px; color:var(--muted); margin:4px 0}
-  .hidden{display:none}
+  .hidden{display:none !important}
 </style>
 
 <div class="card">
@@ -81,6 +103,7 @@
     <div class="sub">かな ・ カナ ・ 選擇要練習的假名</div>
     <button class="choose" data-mode="kata"><big>カ</big>片假名 Katakana</button>
     <button class="choose pink" data-mode="hira"><big>か</big>平假名 Hiragana</button>
+    <button id="dobaBtn" class="choose doba"><big>ど</big>どば</button>
     <div class="hint">羅馬拼音 / 平假名 / 片假名,任一種正確都算對。</div>
   </div>
 
@@ -114,6 +137,11 @@
     <div class="grade" id="comment"></div>
     <button id="again">再玩一次(同模式)</button>
     <button id="backHome" class="ghost">回主畫面(換假名)</button>
+  </div>
+
+  <!-- どば 頁面 -->
+  <div id="doba" class="hidden">
+    <button id="dobaBack">← 回上一頁</button>
   </div>
 </div>
 
@@ -177,7 +205,16 @@ function accepted(item){
 function showHome(){
   $("quiz").classList.add("hidden");
   $("result").classList.add("hidden");
+  $("doba").classList.add("hidden");
   $("home").classList.remove("hidden");
+}
+
+function showDoba(){
+  $("home").classList.add("hidden");
+  $("quiz").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("doba").classList.remove("hidden");
+  speak("どばちゃん、おかえり");   // 只有語音,畫面不顯示文字
 }
 
 function start(m){
@@ -274,13 +311,18 @@ function finish(){
 }
 
 // 事件
-document.querySelectorAll(".choose").forEach(b=>{
+document.querySelectorAll(".choose[data-mode]").forEach(b=>{
   b.addEventListener("click", ()=> start(b.dataset.mode));
 });
 $("check").addEventListener("click", check);
 $("next").addEventListener("click", next);
 $("again").addEventListener("click", ()=> start(mode));
 $("backHome").addEventListener("click", showHome);
+$("dobaBtn").addEventListener("click", showDoba);
+$("dobaBack").addEventListener("click", ()=>{
+  speak("どばちゃん、さようなら");   // 在どば頁播道別語音,不顯示文字
+  setTimeout(showHome, 1200);        // 語音在這頁播一下再回主畫面
+});
 $("speak").addEventListener("click", ()=> speak(shownChar(deck[idx])));
 $("ans").addEventListener("keydown", e=>{
   if(e.key==="Enter"){
