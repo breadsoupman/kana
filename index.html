@@ -12,12 +12,14 @@
     --bg:#f4f6fb; --card:#ffffff; --text:#1f2430; --muted:#6b7280;
     --accent:#4f7cff; --accent-d:#3a63d8; --ok:#1faa6b; --ok-bg:#e5f7ee;
     --bad:#e5484d; --bad-bg:#fdecec; --border:#e3e7ef; --pink:#ff6fae; --pink-d:#e8559a;
+    --review:#7c5cff; --review-d:#6a49f2;
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#12151c; --card:#1c212c; --text:#eef1f7; --muted:#9aa3b2;
       --accent:#6b93ff; --accent-d:#5680f0; --ok:#3ddc97; --ok-bg:#123024;
       --bad:#ff6b6f; --bad-bg:#341b1d; --border:#2a3140; --pink:#ff86bd; --pink-d:#ff6fae;
+      --review:#9d84ff; --review-d:#8b6dff;
     }
   }
   *{box-sizing:border-box}
@@ -47,7 +49,7 @@
   body.compact .answer{min-height:14px; font-size:13px}
   body.compact button{margin-top:8px; padding:11px; font-size:16px}
   h1{font-size:24px; text-align:center; margin:6px 0 4px}
-  .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:22px}
+  .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:14px}
   .top{display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--muted)}
   .bar{height:7px; background:var(--border); border-radius:99px; margin:14px 0 6px; overflow:hidden}
   .bar > i{display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .3s}
@@ -79,8 +81,24 @@
   button.ghost:hover{background:transparent; color:var(--accent-d); border-color:var(--accent-d)}
   button.small{width:auto; display:block; margin:2px auto 4px; padding:8px 18px; font-size:14px}
   button.pink{background:var(--pink)} button.pink:hover{background:var(--pink-d)}
+  button.review{background:var(--review)} button.review:hover{background:var(--review-d)}
   button.doba{background:#c98a3a} button.doba:hover{background:#b2762c}
   .choose big{display:block; font-size:40px; font-weight:700; margin-bottom:2px}
+  /* 範圍選擇 chips */
+  .groups{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:4px 0 8px}
+  .chip{
+    width:auto; margin:0; padding:8px 15px; font-size:14px; font-weight:600;
+    border:2px solid var(--border); border-radius:99px;
+    background:transparent; color:var(--muted); transition:all .15s;
+  }
+  .chip:hover{background:transparent; border-color:var(--muted)}
+  .chip.on{
+    border-color:var(--accent); color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .chip.on:hover{border-color:var(--accent-d)}
+  .rangeInfo{text-align:center; color:var(--muted); font-size:13px; margin:0 0 12px}
+  .rangeInfo b{color:var(--text)}
   /* どば 頁面 */
   #doba{
     position:relative; border-radius:14px; overflow:hidden;
@@ -103,14 +121,26 @@
 </style>
 
 <div class="card">
-  <!-- 主畫面:選模式 -->
+  <!-- 主畫面:選範圍 + 模式 -->
   <div id="home">
     <h1>假名練習</h1>
-    <div class="sub">かな ・ カナ ・ 選擇要練習的假名</div>
+    <div class="sub">かな ・ カナ ・ 選擇範圍與模式</div>
+
+    <div class="groups">
+      <button class="chip on" data-group="seion">清音</button>
+      <button class="chip" data-group="dakuten">濁音</button>
+      <button class="chip" data-group="handakuten">半濁音</button>
+      <button class="chip" data-group="yoon">拗音</button>
+    </div>
+    <div class="rangeInfo">目前範圍共 <b id="rangeCount">46</b> 字</div>
+
     <button class="choose" data-mode="kata"><big>カ</big>片假名 Katakana</button>
     <button class="choose pink" data-mode="hira"><big>か</big>平假名 Hiragana</button>
+    <button id="reviewBtn" class="choose review hidden"><big>✎</big>錯題重練 <span id="reviewCount">(0)</span></button>
+    <button id="clearWrong" class="ghost small hidden">清空錯題本</button>
     <button id="dobaBtn" class="choose doba"><big>ど</big>どば</button>
-    <div class="hint">羅馬拼音 / 平假名 / 片假名,任一種正確都算對。</div>
+
+    <div class="hint">羅馬拼音 / 平假名 / 片假名,任一種正確都算對。答錯的字會進錯題本,可隨時重練。</div>
   </div>
 
   <!-- 測驗畫面 -->
@@ -133,7 +163,7 @@
     <button id="check">送出</button>
     <button id="next" class="hidden">下一題 →</button>
 
-    <div class="hint">答錯有第二次機會;第二次答對一樣算對。再錯會顯示答案。</div>
+    <div class="hint">答錯有第二次機會;第二次答對一樣算對。再錯會顯示答案並記入錯題本。</div>
   </div>
 
   <!-- 結果畫面 -->
@@ -141,8 +171,8 @@
     <div class="grade" id="resultTitle">測驗完成 🎉</div>
     <div class="score"><span id="correctCount">0</span><small> / <span id="rtotal">46</span> 題</small></div>
     <div class="grade" id="comment"></div>
-    <button id="again">再玩一次(同模式)</button>
-    <button id="backHome" class="ghost">回主畫面(換假名)</button>
+    <button id="again">再玩一次</button>
+    <button id="backHome" class="ghost">回主畫面</button>
   </div>
 
   <!-- どば 頁面 -->
@@ -152,23 +182,50 @@
 </div>
 
 <script>
-// [片假名, [羅馬拼音...], 平假名]
+// [片假名, [羅馬拼音...], 平假名, 分組]
 const KANA = [
-  ["ア",["a"],"あ"],["イ",["i"],"い"],["ウ",["u"],"う"],["エ",["e"],"え"],["オ",["o"],"お"],
-  ["カ",["ka"],"か"],["キ",["ki"],"き"],["ク",["ku"],"く"],["ケ",["ke"],"け"],["コ",["ko"],"こ"],
-  ["サ",["sa"],"さ"],["シ",["shi","si"],"し"],["ス",["su"],"す"],["セ",["se"],"せ"],["ソ",["so"],"そ"],
-  ["タ",["ta"],"た"],["チ",["chi","ti"],"ち"],["ツ",["tsu","tu"],"つ"],["テ",["te"],"て"],["ト",["to"],"と"],
-  ["ナ",["na"],"な"],["ニ",["ni"],"に"],["ヌ",["nu"],"ぬ"],["ネ",["ne"],"ね"],["ノ",["no"],"の"],
-  ["ハ",["ha"],"は"],["ヒ",["hi"],"ひ"],["フ",["fu","hu"],"ふ"],["ヘ",["he"],"へ"],["ホ",["ho"],"ほ"],
-  ["マ",["ma"],"ま"],["ミ",["mi"],"み"],["ム",["mu"],"む"],["メ",["me"],"め"],["モ",["mo"],"も"],
-  ["ヤ",["ya"],"や"],["ユ",["yu"],"ゆ"],["ヨ",["yo"],"よ"],
-  ["ラ",["ra"],"ら"],["リ",["ri"],"り"],["ル",["ru"],"る"],["レ",["re"],"れ"],["ロ",["ro"],"ろ"],
-  ["ワ",["wa"],"わ"],["ヲ",["wo","o"],"を"],["ン",["n","nn"],"ん"],
+  // ── 清音 seion ──
+  ["ア",["a"],"あ","seion"],["イ",["i"],"い","seion"],["ウ",["u"],"う","seion"],["エ",["e"],"え","seion"],["オ",["o"],"お","seion"],
+  ["カ",["ka"],"か","seion"],["キ",["ki"],"き","seion"],["ク",["ku"],"く","seion"],["ケ",["ke"],"け","seion"],["コ",["ko"],"こ","seion"],
+  ["サ",["sa"],"さ","seion"],["シ",["shi","si"],"し","seion"],["ス",["su"],"す","seion"],["セ",["se"],"せ","seion"],["ソ",["so"],"そ","seion"],
+  ["タ",["ta"],"た","seion"],["チ",["chi","ti"],"ち","seion"],["ツ",["tsu","tu"],"つ","seion"],["テ",["te"],"て","seion"],["ト",["to"],"と","seion"],
+  ["ナ",["na"],"な","seion"],["ニ",["ni"],"に","seion"],["ヌ",["nu"],"ぬ","seion"],["ネ",["ne"],"ね","seion"],["ノ",["no"],"の","seion"],
+  ["ハ",["ha"],"は","seion"],["ヒ",["hi"],"ひ","seion"],["フ",["fu","hu"],"ふ","seion"],["ヘ",["he"],"へ","seion"],["ホ",["ho"],"ほ","seion"],
+  ["マ",["ma"],"ま","seion"],["ミ",["mi"],"み","seion"],["ム",["mu"],"む","seion"],["メ",["me"],"め","seion"],["モ",["mo"],"も","seion"],
+  ["ヤ",["ya"],"や","seion"],["ユ",["yu"],"ゆ","seion"],["ヨ",["yo"],"よ","seion"],
+  ["ラ",["ra"],"ら","seion"],["リ",["ri"],"り","seion"],["ル",["ru"],"る","seion"],["レ",["re"],"れ","seion"],["ロ",["ro"],"ろ","seion"],
+  ["ワ",["wa"],"わ","seion"],["ヲ",["wo","o"],"を","seion"],["ン",["n","nn"],"ん","seion"],
+
+  // ── 濁音 dakuten ──
+  ["ガ",["ga"],"が","dakuten"],["ギ",["gi"],"ぎ","dakuten"],["グ",["gu"],"ぐ","dakuten"],["ゲ",["ge"],"げ","dakuten"],["ゴ",["go"],"ご","dakuten"],
+  ["ザ",["za"],"ざ","dakuten"],["ジ",["ji","zi"],"じ","dakuten"],["ズ",["zu"],"ず","dakuten"],["ゼ",["ze"],"ぜ","dakuten"],["ゾ",["zo"],"ぞ","dakuten"],
+  ["ダ",["da"],"だ","dakuten"],["ヂ",["ji","di"],"ぢ","dakuten"],["ヅ",["zu","du"],"づ","dakuten"],["デ",["de"],"で","dakuten"],["ド",["do"],"ど","dakuten"],
+  ["バ",["ba"],"ば","dakuten"],["ビ",["bi"],"び","dakuten"],["ブ",["bu"],"ぶ","dakuten"],["ベ",["be"],"べ","dakuten"],["ボ",["bo"],"ぼ","dakuten"],
+
+  // ── 半濁音 handakuten ──
+  ["パ",["pa"],"ぱ","handakuten"],["ピ",["pi"],"ぴ","handakuten"],["プ",["pu"],"ぷ","handakuten"],["ペ",["pe"],"ぺ","handakuten"],["ポ",["po"],"ぽ","handakuten"],
+
+  // ── 拗音 yoon ──
+  ["キャ",["kya"],"きゃ","yoon"],["キュ",["kyu"],"きゅ","yoon"],["キョ",["kyo"],"きょ","yoon"],
+  ["シャ",["sha","sya"],"しゃ","yoon"],["シュ",["shu","syu"],"しゅ","yoon"],["ショ",["sho","syo"],"しょ","yoon"],
+  ["チャ",["cha","tya"],"ちゃ","yoon"],["チュ",["chu","tyu"],"ちゅ","yoon"],["チョ",["cho","tyo"],"ちょ","yoon"],
+  ["ニャ",["nya"],"にゃ","yoon"],["ニュ",["nyu"],"にゅ","yoon"],["ニョ",["nyo"],"にょ","yoon"],
+  ["ヒャ",["hya"],"ひゃ","yoon"],["ヒュ",["hyu"],"ひゅ","yoon"],["ヒョ",["hyo"],"ひょ","yoon"],
+  ["ミャ",["mya"],"みゃ","yoon"],["ミュ",["myu"],"みゅ","yoon"],["ミョ",["myo"],"みょ","yoon"],
+  ["リャ",["rya"],"りゃ","yoon"],["リュ",["ryu"],"りゅ","yoon"],["リョ",["ryo"],"りょ","yoon"],
+  ["ギャ",["gya"],"ぎゃ","yoon"],["ギュ",["gyu"],"ぎゅ","yoon"],["ギョ",["gyo"],"ぎょ","yoon"],
+  ["ジャ",["ja","jya","zya"],"じゃ","yoon"],["ジュ",["ju","jyu","zyu"],"じゅ","yoon"],["ジョ",["jo","jyo","zyo"],"じょ","yoon"],
+  ["ビャ",["bya"],"びゃ","yoon"],["ビュ",["byu"],"びゅ","yoon"],["ビョ",["byo"],"びょ","yoon"],
+  ["ピャ",["pya"],"ぴゃ","yoon"],["ピュ",["pyu"],"ぴゅ","yoon"],["ピョ",["pyo"],"ぴょ","yoon"],
 ];
 
-const TOTAL = KANA.length;   // 全部五十音,不重複
+const GROUP_LABEL = {seion:"清音", dakuten:"濁音", handakuten:"半濁音", yoon:"拗音"};
+const GKEY = "kana_groups_v1";
+const WKEY = "kana_wrong_v1";
 
-let mode="kata", deck=[], idx=0, correct=0, attempts=0;
+// deck 內每題 = { item:[…], mode:"kata"|"hira" }
+let deck=[], idx=0, correct=0, attempts=0, total=0, reviewMode=false;
+const selectedGroups = new Set(["seion"]);
 
 const $ = id => document.getElementById(id);
 
@@ -180,8 +237,8 @@ function shuffle(a){
 function norm(s){
   return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[ー－-]/g,"");
 }
-// 目前題目要顯示的字(片假名模式顯示片假名,平假名模式顯示平假名)
-function shownChar(item){ return mode==="kata" ? item[0] : item[2]; }
+// 這一題要顯示的字(依該題自己的模式)
+function shownChar(entry){ return entry.mode==="kata" ? entry.item[0] : entry.item[2]; }
 
 // 唸出讀音(iPhone Safari 支援;需在使用者互動後觸發)
 function speak(text){
@@ -208,13 +265,47 @@ function accepted(item){
   return set;
 }
 
+/* ── 錯題本(localStorage 持久化) ── */
+function loadWrong(){
+  try{ return new Set(JSON.parse(localStorage.getItem(WKEY)||"[]")); }catch(e){ return new Set(); }
+}
+function saveWrong(){ try{ localStorage.setItem(WKEY, JSON.stringify([...wrongSet])); }catch(e){} }
+let wrongSet = loadWrong();
+function wrongKey(item,m){ return item[0]+"|"+m; }          // 片假名 + 模式 當唯一鍵
+function addWrong(item,m){ wrongSet.add(wrongKey(item,m)); saveWrong(); }
+function removeWrong(item,m){ if(wrongSet.delete(wrongKey(item,m))) saveWrong(); }
+function buildReviewDeck(){
+  const byKata = new Map(KANA.map(it=>[it[0], it]));
+  const d=[];
+  for(const key of wrongSet){
+    const bar=key.lastIndexOf("|");
+    const k=key.slice(0,bar), m=key.slice(bar+1);
+    const it=byKata.get(k);
+    if(it) d.push({item:it, mode:m});
+  }
+  return d;
+}
+function updateReviewUI(){
+  const n=wrongSet.size;
+  $("reviewCount").textContent="("+n+")";
+  $("reviewBtn").classList.toggle("hidden", n===0);
+  $("clearWrong").classList.toggle("hidden", n===0);
+}
+
+/* ── 範圍選擇 ── */
+function saveGroups(){ try{ localStorage.setItem(GKEY, JSON.stringify([...selectedGroups])); }catch(e){} }
+function updateRange(){
+  $("rangeCount").textContent = KANA.filter(it=>selectedGroups.has(it[3])).length;
+}
+
+/* ── 畫面切換 ── */
 function showHome(){
   $("quiz").classList.add("hidden");
   $("result").classList.add("hidden");
   $("doba").classList.add("hidden");
   $("home").classList.remove("hidden");
+  updateReviewUI();
 }
-
 function showDoba(){
   $("home").classList.add("hidden");
   $("quiz").classList.add("hidden");
@@ -223,11 +314,23 @@ function showDoba(){
   speak("どばちゃん、おかえり");   // 只有語音,畫面不顯示文字
 }
 
+/* ── 出題 ── */
 function start(m){
-  mode=m;
-  deck=shuffle(KANA); idx=0; correct=0;
-  $("modeLabel").textContent = mode==="kata" ? "片假名" : "平假名";
-  $("qtotal").textContent = TOTAL;
+  reviewMode=false;
+  const items = KANA.filter(it=>selectedGroups.has(it[3]));
+  deck = shuffle(items).map(it=>({item:it, mode:m}));
+  beginQuiz();
+}
+function startReview(){
+  const d = buildReviewDeck();
+  if(!d.length){ showHome(); return; }
+  reviewMode=true;
+  deck = shuffle(d);
+  beginQuiz();
+}
+function beginQuiz(){
+  idx=0; correct=0; total=deck.length;
+  $("qtotal").textContent=total;
   $("home").classList.add("hidden");
   $("result").classList.add("hidden");
   $("quiz").classList.remove("hidden");
@@ -236,11 +339,12 @@ function start(m){
 
 function loadQ(){
   attempts=0;
-  const item=deck[idx];
-  $("kana").textContent = shownChar(item);
+  const entry=deck[idx];
+  $("modeLabel").textContent = (reviewMode?"複習·":"") + (entry.mode==="kata"?"片假名":"平假名");
+  $("kana").textContent = shownChar(entry);
   $("qnum").textContent = idx+1;
   $("score").textContent = correct;
-  $("prog").style.width = (idx/TOTAL*100)+"%";
+  $("prog").style.width = (idx/total*100)+"%";
   const inp=$("ans");
   inp.value=""; inp.disabled=false; inp.className="";
   $("msg").className="msg"; $("msg").innerHTML="&nbsp;";
@@ -251,13 +355,14 @@ function loadQ(){
 }
 
 function check(){
-  const item=deck[idx];
+  const entry=deck[idx], item=entry.item, m=entry.mode;
   const inp=$("ans");
   const val=norm(inp.value);
 
   if(val && accepted(item).has(val)){
-    // 答對(第一次或第二次都算整題答對)
+    // 答對(第一次或第二次都算整題答對)→ 從錯題本移除
     correct++;
+    removeWrong(item,m);
     inp.className="ok"; inp.disabled=true;
     $("msg").className="msg ok";
     $("msg").textContent = attempts===0 ? "正確!" : "答對了!";
@@ -275,10 +380,12 @@ function check(){
     $("msg").textContent="不對喔,再試一次!";
     inp.value=""; inp.focus();         // 答錯一次後自動清空
   }else{
+    // 兩次都錯 → 顯示答案並記入錯題本
+    addWrong(item,m);
     inp.className="bad"; inp.disabled=true;
     $("msg").className="msg bad";
     $("msg").textContent="答錯了。";
-    const other = mode==="kata"
+    const other = m==="kata"
       ? "平假名 <b>"+item[2]+"</b>"
       : "片假名 <b>"+item[0]+"</b>";
     $("reveal").innerHTML = "正確答案:<b>"+item[1][0]+"</b> ・ "+other;
@@ -290,25 +397,30 @@ function toNext(){
   $("check").classList.add("hidden");
   const nb=$("next");
   nb.classList.remove("hidden");
-  nb.textContent = (idx+1>=TOTAL) ? "看結果 →" : "下一題 →";
+  nb.textContent = (idx+1>=total) ? "看結果 →" : "下一題 →";
   nb.focus();
 }
 
 function next(){
   idx++;
-  if(idx>=TOTAL){ finish(); return; }
+  if(idx>=total){ finish(); return; }
   loadQ();
 }
 
 function finish(){
   $("quiz").classList.add("hidden");
   $("result").classList.remove("hidden");
-  $("resultTitle").textContent = (mode==="kata"?"片假名":"平假名")+" 測驗完成 🎉";
+  $("resultTitle").textContent = reviewMode
+    ? "錯題重練完成 🎉"
+    : (deck[0].mode==="kata"?"片假名":"平假名")+" 測驗完成 🎉";
   $("correctCount").textContent = correct;
-  $("rtotal").textContent = TOTAL;
-  const r = correct/TOTAL;
+  $("rtotal").textContent = total;
+  const r = total ? correct/total : 0;
   let c;
-  if(r===1) c="全對!太神啦 🏆";
+  if(reviewMode){
+    const left = wrongSet.size;
+    c = left===0 ? "錯題本清空了,全部攻克!🏆" : "還剩 "+left+" 個,再練一輪 💪";
+  }else if(r===1) c="全對!太神啦 🏆";
   else if(r>=0.9) c="超強,幾乎全對!💪";
   else if(r>=0.7) c="很不錯,再拼全對 👍";
   else if(r>=0.5) c="有基礎了,繼續練會更好 🔥";
@@ -316,13 +428,32 @@ function finish(){
   $("comment").textContent=c;
 }
 
-// 事件
+/* ── 事件 ── */
+document.querySelectorAll(".chip[data-group]").forEach(ch=>{
+  ch.addEventListener("click", ()=>{
+    const g=ch.dataset.group;
+    if(selectedGroups.has(g)){
+      if(selectedGroups.size===1) return;      // 至少保留一個範圍
+      selectedGroups.delete(g); ch.classList.remove("on");
+    }else{
+      selectedGroups.add(g); ch.classList.add("on");
+    }
+    saveGroups(); updateRange();
+  });
+});
 document.querySelectorAll(".choose[data-mode]").forEach(b=>{
   b.addEventListener("click", ()=> start(b.dataset.mode));
 });
+$("reviewBtn").addEventListener("click", startReview);
+$("clearWrong").addEventListener("click", ()=>{
+  if(confirm("確定清空錯題本?")){ wrongSet.clear(); saveWrong(); updateReviewUI(); }
+});
 $("check").addEventListener("click", check);
 $("next").addEventListener("click", next);
-$("again").addEventListener("click", ()=> start(mode));
+$("again").addEventListener("click", ()=>{
+  if(reviewMode){ startReview(); }        // 重練會用最新的錯題本;若已空會自動回主畫面
+  else start(deck[0].mode);
+});
 $("backHome").addEventListener("click", showHome);
 $("dobaBtn").addEventListener("click", showDoba);
 $("dobaBack").addEventListener("click", ()=>{
@@ -351,6 +482,19 @@ if(window.visualViewport){
 window.addEventListener("resize", fitViewport);
 window.addEventListener("orientationchange", fitViewport);
 fitViewport();
+
+/* ── 啟動:載入已存的範圍選擇 ── */
+(function initGroups(){
+  try{
+    const s=JSON.parse(localStorage.getItem(GKEY)||"null");
+    if(Array.isArray(s) && s.length){ selectedGroups.clear(); s.forEach(g=>{ if(GROUP_LABEL[g]) selectedGroups.add(g); }); }
+    if(selectedGroups.size===0) selectedGroups.add("seion");
+  }catch(e){}
+  document.querySelectorAll(".chip[data-group]").forEach(ch=>{
+    ch.classList.toggle("on", selectedGroups.has(ch.dataset.group));
+  });
+  updateRange();
+})();
 
 showHome();
 </script>
