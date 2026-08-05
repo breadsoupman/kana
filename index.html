@@ -128,8 +128,7 @@
 
     <div class="groups">
       <button class="chip on" data-group="seion">清音</button>
-      <button class="chip" data-group="dakuten">濁音</button>
-      <button class="chip" data-group="handakuten">半濁音</button>
+      <button class="chip" data-group="dakuten">濁音・半濁音</button>
       <button class="chip" data-group="yoon">拗音</button>
     </div>
     <div class="rangeInfo">目前範圍共 <b id="rangeCount">46</b> 字</div>
@@ -196,14 +195,14 @@ const KANA = [
   ["ラ",["ra"],"ら","seion"],["リ",["ri"],"り","seion"],["ル",["ru"],"る","seion"],["レ",["re"],"れ","seion"],["ロ",["ro"],"ろ","seion"],
   ["ワ",["wa"],"わ","seion"],["ヲ",["wo","o"],"を","seion"],["ン",["n","nn"],"ん","seion"],
 
-  // ── 濁音 dakuten ──
+  // ── 濁音・半濁音 dakuten ──
   ["ガ",["ga"],"が","dakuten"],["ギ",["gi"],"ぎ","dakuten"],["グ",["gu"],"ぐ","dakuten"],["ゲ",["ge"],"げ","dakuten"],["ゴ",["go"],"ご","dakuten"],
   ["ザ",["za"],"ざ","dakuten"],["ジ",["ji","zi"],"じ","dakuten"],["ズ",["zu"],"ず","dakuten"],["ゼ",["ze"],"ぜ","dakuten"],["ゾ",["zo"],"ぞ","dakuten"],
   ["ダ",["da"],"だ","dakuten"],["ヂ",["ji","di"],"ぢ","dakuten"],["ヅ",["zu","du"],"づ","dakuten"],["デ",["de"],"で","dakuten"],["ド",["do"],"ど","dakuten"],
   ["バ",["ba"],"ば","dakuten"],["ビ",["bi"],"び","dakuten"],["ブ",["bu"],"ぶ","dakuten"],["ベ",["be"],"べ","dakuten"],["ボ",["bo"],"ぼ","dakuten"],
 
-  // ── 半濁音 handakuten ──
-  ["パ",["pa"],"ぱ","handakuten"],["ピ",["pi"],"ぴ","handakuten"],["プ",["pu"],"ぷ","handakuten"],["ペ",["pe"],"ぺ","handakuten"],["ポ",["po"],"ぽ","handakuten"],
+  // 半濁音(併入濁音組)
+  ["パ",["pa"],"ぱ","dakuten"],["ピ",["pi"],"ぴ","dakuten"],["プ",["pu"],"ぷ","dakuten"],["ペ",["pe"],"ぺ","dakuten"],["ポ",["po"],"ぽ","dakuten"],
 
   // ── 拗音 yoon ──
   ["キャ",["kya"],"きゃ","yoon"],["キュ",["kyu"],"きゅ","yoon"],["キョ",["kyo"],"きょ","yoon"],
@@ -219,7 +218,7 @@ const KANA = [
   ["ピャ",["pya"],"ぴゃ","yoon"],["ピュ",["pyu"],"ぴゅ","yoon"],["ピョ",["pyo"],"ぴょ","yoon"],
 ];
 
-const GROUP_LABEL = {seion:"清音", dakuten:"濁音", handakuten:"半濁音", yoon:"拗音"};
+const GROUP_LABEL = {seion:"清音", dakuten:"濁音・半濁音", yoon:"拗音"};
 const GKEY = "kana_groups_v1";
 const WKEY = "kana_wrong_v1";
 
