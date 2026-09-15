@@ -83,6 +83,7 @@
   button.pink{background:var(--pink)} button.pink:hover{background:var(--pink-d)}
   button.review{background:var(--review)} button.review:hover{background:var(--review-d)}
   button.doba{background:#c98a3a} button.doba:hover{background:#b2762c}
+  button.words{background:#ff8a3d} button.words:hover{background:#ee7526}
   .choose big{display:block; font-size:40px; font-weight:700; margin-bottom:2px}
   /* 範圍選擇 chips */
   .groups{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:4px 0 8px}
@@ -138,6 +139,7 @@
     <button id="reviewBtn" class="choose review hidden"><big>✎</big>錯題重練 <span id="reviewCount">(0)</span></button>
     <button id="clearWrong" class="ghost small hidden">清空錯題本</button>
     <button id="dobaBtn" class="choose doba"><big>ど</big>どば</button>
+    <button id="wordsBtn" class="choose words"><big>📇</big>單字卡 たんご</button>
 
     <div class="hint">羅馬拼音 / 平假名 / 片假名,任一種正確都算對。答錯的字會進錯題本,可隨時重練。</div>
   </div>
@@ -455,6 +457,7 @@ $("again").addEventListener("click", ()=>{
 });
 $("backHome").addEventListener("click", showHome);
 $("dobaBtn").addEventListener("click", showDoba);
+$("wordsBtn").addEventListener("click", ()=>{ location.href="words.html"; });
 $("dobaBack").addEventListener("click", ()=>{
   speak("どばちゃん、さようなら");   // 在どば頁播道別語音,不顯示文字
   setTimeout(showHome, 1200);        // 語音在這頁播一下再回主畫面
