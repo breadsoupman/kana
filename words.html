@@ -1,0 +1,717 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>單字卡 たんご</title>
+<!-- iPhone「加入主畫面」後像 App 一樣全螢幕開啟 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="單字卡">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ff8a3d">
+<style>
+  :root{
+    --bg:#fdf7f1; --card:#ffffff; --card2:#fffaf4; --text:#241f1b; --muted:#7a7169;
+    --accent:#ff8a3d; --accent-d:#ee7526; --ok:#1faa6b; --ok-bg:#e5f7ee;
+    --bad:#e5484d; --bad-bg:#fdecec; --border:#eadfd4;
+    --blue:#4f7cff; --blue-d:#3a63d8; --purple:#7c5cff; --purple-d:#6a49f2;
+    --gold:#f3b229;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14110f; --card:#1e1a17; --card2:#252017; --text:#f4efe9; --muted:#a49a90;
+      --accent:#ff9f5e; --accent-d:#ff8a3d; --ok:#3ddc97; --ok-bg:#123024;
+      --bad:#ff6b6f; --bad-bg:#341b1d; --border:#372f28;
+      --blue:#6b93ff; --blue-d:#5680f0; --purple:#9d84ff; --purple-d:#8b6dff;
+      --gold:#ffc94d;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI","Microsoft JhengHei",sans-serif;
+    background:var(--bg); color:var(--text);
+    display:flex; justify-content:center; padding:20px;
+    min-height:100vh; min-height:100dvh;
+    -webkit-text-size-adjust:100%;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; width:100%; max-width:460px;
+    padding:24px 22px 26px; box-shadow:0 12px 40px rgba(0,0,0,.10);
+    margin:auto;
+  }
+  h1{font-size:24px; text-align:center; margin:6px 0 4px}
+  .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:14px}
+  .top{display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--muted)}
+  .bar{height:7px; background:var(--border); border-radius:99px; margin:12px 0 10px; overflow:hidden}
+  .bar > i{display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .3s}
+
+  /* ── 按鈕 ── */
+  button{
+    width:100%; margin-top:10px; padding:14px; font-size:17px; font-weight:700;
+    border:none; border-radius:14px; background:var(--accent); color:#fff;
+    cursor:pointer; transition:background .2s, transform .05s; font-family:inherit;
+  }
+  button:hover{background:var(--accent-d)} button:active{transform:scale(.99)}
+  button.blue{background:var(--blue)} button.blue:hover{background:var(--blue-d)}
+  button.purple{background:var(--purple)} button.purple:hover{background:var(--purple-d)}
+  button.ghost{background:transparent; color:var(--accent); border:2px solid var(--accent)}
+  button.ghost:hover{background:transparent; color:var(--accent-d); border-color:var(--accent-d)}
+  button.small{width:auto; display:block; margin:6px auto 0; padding:8px 18px; font-size:14px}
+  button:disabled{opacity:.5; cursor:default}
+  .choose big{display:block; font-size:30px; font-weight:700; margin-bottom:2px; line-height:1.2}
+
+  /* ── 範圍 chips ── */
+  .groups{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:4px 0 8px}
+  .chip{
+    width:auto; margin:0; padding:8px 14px; font-size:14px; font-weight:600;
+    border:2px solid var(--border); border-radius:99px;
+    background:transparent; color:var(--muted); transition:all .15s;
+  }
+  .chip:hover{background:transparent; border-color:var(--muted)}
+  .chip.on{
+    border-color:var(--accent); color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .chip.on:hover{border-color:var(--accent-d)}
+  .rowbtns{display:flex; gap:8px; justify-content:center; margin-bottom:8px}
+  .rowbtns button{width:auto; margin:0; padding:6px 14px; font-size:13px; font-weight:600;
+    background:transparent; color:var(--muted); border:2px solid var(--border); border-radius:99px}
+  .rowbtns button:hover{background:transparent; border-color:var(--muted)}
+  .rangeInfo{text-align:center; color:var(--muted); font-size:13px; margin:0 0 12px}
+  .rangeInfo b{color:var(--text)}
+
+  /* ── 單字卡翻面 ── */
+  .fc{perspective:1400px; height:300px; margin:4px 0 6px; cursor:pointer; touch-action:pan-y}
+  .fc-inner{position:relative; width:100%; height:100%;
+    transition:transform .45s cubic-bezier(.4,.1,.2,1); transform-style:preserve-3d}
+  .fc.flip .fc-inner{transform:rotateY(180deg)}
+  .fc-face{
+    position:absolute; inset:0; -webkit-backface-visibility:hidden; backface-visibility:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border:2px solid var(--border); border-radius:20px; background:var(--card2);
+    padding:18px 14px; text-align:center; overflow:hidden;
+  }
+  .fc-back{transform:rotateY(180deg)}
+  .pic{font-size:64px; line-height:1.1; margin-bottom:6px}
+  .fc .jp{font-size:44px; font-weight:700; line-height:1.25; word-break:break-all}
+  .fc .kana{font-size:22px; color:var(--accent); font-weight:600; margin-top:6px}
+  .fc .zh{font-size:24px; font-weight:700; line-height:1.3}
+  .fc .zh.smallzh{font-size:19px}
+  .fc .tip{position:absolute; bottom:10px; font-size:12px; color:var(--muted)}
+  .fc .gtag{position:absolute; top:10px; left:12px; font-size:12px; color:var(--muted)}
+  .fc .star{position:absolute; top:6px; right:8px; font-size:20px}
+  .navrow{display:flex; gap:8px; align-items:center; margin-top:4px}
+  .navrow button{margin:0}
+  .navrow .side{flex:0 0 76px; background:transparent; color:var(--muted); border:2px solid var(--border); font-size:20px; padding:12px 0}
+  .navrow .side:hover{background:transparent; border-color:var(--muted)}
+  .navrow .mid{flex:1}
+  .toolrow{display:flex; gap:8px; margin-top:8px}
+  .toolrow button{margin:0; flex:1; padding:10px; font-size:14px}
+  .known{background:var(--gold); color:#3a2a06}
+  .known:hover{background:var(--gold); filter:brightness(.94)}
+
+  /* ── 測驗 ── */
+  .qbox{
+    border:2px solid var(--border); border-radius:18px; background:var(--card2);
+    padding:20px 14px; text-align:center; margin:4px 0 12px; min-height:150px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .qbox .pic{font-size:52px; margin-bottom:4px}
+  .qbox .q{font-size:32px; font-weight:700; line-height:1.3; word-break:break-all}
+  .qbox .q.long{font-size:24px}
+  .qbox .qk{font-size:17px; color:var(--muted); margin-top:6px}
+  .opts{display:flex; flex-direction:column; gap:9px}
+  .opt{
+    width:100%; margin:0; padding:13px 12px; font-size:18px; font-weight:600;
+    background:transparent; color:var(--text); border:2px solid var(--border); text-align:center;
+  }
+  .opt:hover{background:transparent; border-color:var(--muted)}
+  .opt small{display:block; font-size:13px; color:var(--muted); font-weight:500; margin-top:2px}
+  .opt.ok{border-color:var(--ok); background:var(--ok-bg); color:var(--text)}
+  .opt.bad{border-color:var(--bad); background:var(--bad-bg); color:var(--text)}
+  .opt:disabled{opacity:1}
+  .opt.dim{opacity:.45}
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)}
+    30%,50%,70%{transform:translateX(-9px)} 40%,60%{transform:translateX(9px)}
+  }
+  .shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
+  .msg{min-height:22px; text-align:center; margin:10px 0 2px; font-size:15px; font-weight:600}
+  .msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
+
+  .hint{text-align:center; color:var(--muted); font-size:12.5px; margin-top:14px; line-height:1.6}
+  .hint a{color:var(--accent)}
+  .result{text-align:center}
+  .score{font-size:60px; font-weight:800; margin:8px 0 0}
+  .score small{font-size:22px; color:var(--muted); font-weight:600}
+  .grade{font-size:19px; color:var(--muted); margin:4px 0}
+  .hidden{display:none !important}
+</style>
+
+<div class="card">
+  <!-- ── 主畫面 ── -->
+  <div id="home">
+    <h1>單字卡</h1>
+    <div class="sub">たんご ・ 場所・存在</div>
+
+    <div class="groups" id="groupChips"></div>
+    <div class="rowbtns">
+      <button id="selAll" type="button">全選</button>
+      <button id="selNone" type="button">只留第一組</button>
+    </div>
+    <div class="rangeInfo">
+      目前範圍共 <b id="rangeCount">0</b> 張 ・ 已記住 <b id="knownCount">0</b> 張
+    </div>
+
+    <button class="choose" data-mode="flash"><big>📇</big>單字卡（翻面記憶）</button>
+    <button class="choose blue" data-mode="zh2jp"><big>🀄 → 🇯🇵</big>看中文選日文</button>
+    <button class="choose purple" data-mode="jp2zh"><big>🇯🇵 → 🀄</big>看日文選中文</button>
+    <button class="choose ghost" data-mode="listen"><big>🔊</big>聽發音選單字</button>
+    <button id="reviewBtn" class="choose ghost hidden"><big>✎</big>錯題重練 <span id="reviewCount">(0)</span></button>
+    <button id="clearWrong" class="small ghost hidden" type="button">清空錯題本</button>
+    <button id="clearKnown" class="small ghost hidden" type="button">清空「已記住」標記</button>
+
+    <div class="hint">
+      單字卡點一下翻面，左右滑動換下一張，⭐ 可標記已記住。<br>
+      測驗答錯的單字會進錯題本，可隨時重練。<br>
+      <a href="index.html">← 回假名練習</a>
+    </div>
+  </div>
+
+  <!-- ── 單字卡 ── -->
+  <div id="flash" class="hidden">
+    <div class="top">
+      <span>單字卡 · 第 <b id="fnum">1</b>/<span id="ftotal">0</span></span>
+      <span id="fknown">已記住 <b>0</b></span>
+    </div>
+    <div class="bar"><i id="fprog"></i></div>
+
+    <div class="fc" id="fc">
+      <div class="fc-inner">
+        <div class="fc-face fc-front">
+          <span class="gtag" id="fgroup"></span>
+          <span class="star" id="fstar"></span>
+          <div class="pic" id="fpicF">📇</div>
+          <div id="ffront"></div>
+          <div class="tip">點一下翻面</div>
+        </div>
+        <div class="fc-face fc-back">
+          <span class="gtag" id="fgroup2"></span>
+          <span class="star" id="fstar2"></span>
+          <div class="pic" id="fpicB">📇</div>
+          <div class="jp" id="fjp"></div>
+          <div class="kana" id="fkana"></div>
+          <div class="zh" id="fzh" style="margin-top:10px"></div>
+          <div class="tip">點一下翻回去</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="navrow">
+      <button class="side" id="fprev" type="button">←</button>
+      <button class="mid" id="fspeak" type="button">🔊 播放讀音</button>
+      <button class="side" id="fnext" type="button">→</button>
+    </div>
+    <div class="toolrow">
+      <button id="fmark" class="known" type="button">⭐ 標記已記住</button>
+      <button id="fshuffle" class="ghost" type="button">🔀 重新洗牌</button>
+    </div>
+    <button id="fhome" class="ghost" type="button">回主畫面</button>
+    <div class="hint">正面顯示中文，背面是日文與讀音。左右滑動也能換卡片。</div>
+  </div>
+
+  <!-- ── 測驗 ── -->
+  <div id="quiz" class="hidden">
+    <div class="top">
+      <span><b id="modeLabel"></b> · 第 <b id="qnum">1</b>/<span id="qtotal">0</span></span>
+      <span>答對 <b id="score">0</b></span>
+    </div>
+    <div class="bar"><i id="qprog"></i></div>
+
+    <div class="qbox">
+      <div class="pic" id="qpic"></div>
+      <div class="q" id="qtext"></div>
+      <div class="qk" id="qsub"></div>
+    </div>
+    <button id="qspeak" class="ghost small" type="button">🔊 播放讀音</button>
+
+    <div class="opts" id="opts"></div>
+    <div class="msg" id="msg">&nbsp;</div>
+    <button id="qnext" class="hidden">下一題 →</button>
+    <button id="qhome" class="ghost small" type="button">結束測驗</button>
+  </div>
+
+  <!-- ── 結果 ── -->
+  <div id="result" class="result hidden">
+    <div class="grade" id="resultTitle">測驗完成 🎉</div>
+    <div class="score"><span id="correctCount">0</span><small> / <span id="rtotal">0</span> 題</small></div>
+    <div class="grade" id="comment"></div>
+    <button id="again">再玩一次</button>
+    <button id="backHome" class="ghost">回主畫面</button>
+  </div>
+</div>
+
+<script>
+/* ── 單字資料：[中文, 日本語, 読み, 分組, 圖示] ── */
+const WORDS = [
+  // 存在・こそあど
+  ["有、在（物・植物・建築物）","あります","あります","exist","📦"],
+  ["有、在（人、動物）","います","います","exist","🧍"],
+  ["這裡（靠近說話者）","ここ","ここ","exist","👇"],
+  ["那裡（靠近聽話者）","そこ","そこ","exist","👉"],
+  ["那裡（離兩者都遠）","あそこ","あそこ","exist","↗️"],
+  ["哪裡","どこ","どこ","exist","❓"],
+  ["這裡（禮貌說法）","こちら","こちら","exist","🙋"],
+  ["那裡（禮貌說法）","そちら","そちら","exist","🤲"],
+  ["那裡（禮貌說法・遠）","あちら","あちら","exist","🫱"],
+  ["哪裡（禮貌說法）","どちら","どちら","exist","❔"],
+
+  // 場所
+  ["場所","場所","ばしょ","place","📍"],
+  ["教室","教室","きょうしつ","place","🏫"],
+  ["餐廳（員工、學校）","食堂","しょくどう","place","🍱"],
+  ["銀行","銀行","ぎんこう","place","🏦"],
+  ["郵局","郵便局","ゆうびんきょく","place","📮"],
+  ["醫院","病院","びょういん","place","🏥"],
+  ["派出所","交番","こうばん","place","🚨"],
+  ["超市","スーパー","すーぱー","place","🛒"],
+  ["百貨公司","デパート","でぱーと","place","🏬"],
+  ["餐廳","レストラン","れすとらん","place","🍽️"],
+  ["便利商店","コンビニ","こんびに","place","🏪"],
+  ["咖啡廳","喫茶店","きっさてん","place","☕"],
+  ["公園","公園","こうえん","place","🏞️"],
+  ["車站","駅","えき","place","🚉"],
+  ["電影院","映画館","えいがかん","place","🎬"],
+  ["圖書館","図書館","としょかん","place","📚"],
+  ["停車場","駐車場","ちゅうしゃじょう","place","🅿️"],
+  ["廁所","トイレ","といれ","place","🚻"],
+  ["辦公室","事務所","じむしょ","place","🏢"],
+  ["會議室","会議室","かいぎしつ","place","👥"],
+  ["櫃檯、服務台","受付","うけつけ","place","💁"],
+  ["書店","本屋","ほんや","place","📖"],
+  ["建築物","建物","たてもの","place","🏛️"],
+
+  // 家・物品
+  ["房間","部屋","へや","home","🚪"],
+  ["家","お家","おうち","home","🏠"],
+  ["庭院","庭","にわ","home","🌿"],
+  ["床","ベッド","べっど","home","🛏️"],
+  ["書架","本棚","ほんだな","home","🗄️"],
+  ["架子","棚","たな","home","🗃️"],
+  ["椅子","いす","いす","home","🪑"],
+  ["剪刀","はさみ","はさみ","home","✂️"],
+  ["傳真機","ファクス","ふぁくす","home","📠"],
+  ["音響","ステレオ","すてれお","home","🔊"],
+
+  // 人・動物・植物
+  ["女孩","女の子","おんなのこ","life","👧"],
+  ["男孩","男の子","おとこのこ","life","👦"],
+  ["動物","動物","どうぶつ","life","🐾"],
+  ["狗","犬","いぬ","life","🐕"],
+  ["貓","猫","ねこ","life","🐈"],
+  ["鳥","鳥","とり","life","🐦"],
+  ["魚","魚","さかな","life","🐟"],
+  ["牛","牛","うし","life","🐄"],
+  ["馬","馬","うま","life","🐎"],
+  ["植物","植物","しょくぶつ","life","🪴"],
+  ["樹、木","木","き","life","🌳"],
+  ["花","花","はな","life","🌸"],
+
+  // 位置
+  ["位置","位置","いち","pos","🧭"],
+  ["上、上面","上","うえ","pos","⬆️"],
+  ["下、下面","下","した","pos","⬇️"],
+  ["左、左邊","左","ひだり","pos","⬅️"],
+  ["右、右邊","右","みぎ","pos","➡️"],
+  ["前、前面","前","まえ","pos","⏩"],
+  ["後、後面","後ろ","うしろ","pos","⏪"],
+  ["裡面","中","なか","pos","🎯"],
+  ["外面","外","そと","pos","🌤️"],
+  ["旁邊","隣","となり","pos","👫"],
+
+  // 其他・會話
+  ["什麼","何","なに","misc","❓"],
+  ["東京（日本首都）","東京","とうきょう","misc","🗼"],
+  ["小說","小説","しょうせつ","misc","📕"],
+  ["歷史","歴史","れきし","misc","📜"],
+  ["排列順序","配列","はいれつ","misc","🔢"],
+  ["警察、警官","警察官","けいさつかん","misc","👮"],
+  ["作者","作者","さくしゃ","misc","✍️"],
+  ["五十音順序","五十音順","ごじゅうおんじゅん","misc","🔤"],
+  ["搜尋區","検索コーナー","けんさくこーなー","misc","🔍"],
+  ["貴國","お国","おくに","misc","🌏"],
+  ["不好意思，請問一下","すみません。","すみません","misc","🙇"],
+  ["我知道了","わかりました。","わかりました","misc","👌"],
+];
+
+const GROUPS = [
+  ["exist","存在・こそあど"],
+  ["place","場所"],
+  ["home","家・物品"],
+  ["life","人・動植物"],
+  ["pos","位置"],
+  ["misc","其他・會話"],
+];
+const GROUP_LABEL = Object.fromEntries(GROUPS);
+const MODE_LABEL = {flash:"單字卡", zh2jp:"中→日", jp2zh:"日→中", listen:"聽力"};
+
+const GKEY = "word_groups_v1";
+const WKEY = "word_wrong_v1";
+const KKEY = "word_known_v1";
+
+const $ = id => document.getElementById(id);
+const selectedGroups = new Set(["exist"]);
+
+/* ── 儲存 ── */
+function loadSet(key){
+  try{ return new Set(JSON.parse(localStorage.getItem(key)||"[]")); }catch(e){ return new Set(); }
+}
+function saveSet(key,set){ try{ localStorage.setItem(key, JSON.stringify([...set])); }catch(e){} }
+let wrongSet = loadSet(WKEY);
+let knownSet = loadSet(KKEY);
+const idOf = w => w[1];                       // 用日文當唯一鍵
+const byId = new Map(WORDS.map(w=>[idOf(w), w]));
+
+/* ── 工具 ── */
+function shuffle(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function inRange(){ return WORDS.filter(w=>selectedGroups.has(w[3])); }
+// 假名單字(日文本身就是假名)不必重複顯示讀音
+function kanaOf(w){ return w[1].replace(/[。、]/g,"")===w[2] ? "" : w[2]; }
+function full(w){ const k=kanaOf(w); return w[1] + (k ? "（"+k+"）" : ""); }
+function speak(text){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang="ja-JP"; u.rate=0.85;
+    const jp = speechSynthesis.getVoices().find(v=>/ja(-|_)?jp/i.test(v.lang) || /japanese/i.test(v.name));
+    if(jp) u.voice=jp;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function wrongFeedback(){
+  const card=document.querySelector(".card");
+  card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  if(navigator.vibrate) navigator.vibrate([90,50,90]);
+}
+
+/* ── 主畫面 ── */
+function renderChips(){
+  $("groupChips").innerHTML = GROUPS.map(([g,label])=>{
+    const n = WORDS.filter(w=>w[3]===g).length;
+    return '<button class="chip" type="button" data-group="'+g+'">'+label+' <span style="opacity:.7">'+n+'</span></button>';
+  }).join("");
+  document.querySelectorAll(".chip[data-group]").forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      const g=ch.dataset.group;
+      if(selectedGroups.has(g)){
+        if(selectedGroups.size===1) return;      // 至少保留一組
+        selectedGroups.delete(g);
+      }else{
+        selectedGroups.add(g);
+      }
+      syncChips(); saveSet(GKEY, selectedGroups); updateRange();
+    });
+  });
+}
+function syncChips(){
+  document.querySelectorAll(".chip[data-group]").forEach(ch=>{
+    ch.classList.toggle("on", selectedGroups.has(ch.dataset.group));
+  });
+}
+function updateRange(){
+  const items = inRange();
+  $("rangeCount").textContent = items.length;
+  $("knownCount").textContent = items.filter(w=>knownSet.has(idOf(w))).length;
+  const n = wrongSet.size;
+  $("reviewCount").textContent = "("+n+")";
+  $("reviewBtn").classList.toggle("hidden", n===0);
+  $("clearWrong").classList.toggle("hidden", n===0);
+  $("clearKnown").classList.toggle("hidden", knownSet.size===0);
+}
+function show(which){
+  ["home","flash","quiz","result"].forEach(id=>{
+    $(id).classList.toggle("hidden", id!==which);
+  });
+}
+function showHome(){ show("home"); updateRange(); }
+
+/* ══════════ 單字卡 ══════════ */
+let fdeck=[], fidx=0;
+
+function startFlash(list){
+  fdeck = shuffle(list && list.length ? list : inRange());
+  if(!fdeck.length) return;
+  fidx = 0;
+  $("ftotal").textContent = fdeck.length;
+  show("flash");
+  loadCard();
+}
+function loadCard(){
+  const w = fdeck[fidx];
+  $("fc").classList.remove("flip");
+  $("fnum").textContent = fidx+1;
+  $("fprog").style.width = ((fidx+1)/fdeck.length*100)+"%";
+  $("fpicF").textContent = w[4];
+  $("fpicB").textContent = w[4];
+  const zhLong = w[0].length > 8;
+  $("ffront").innerHTML = '<div class="zh'+(zhLong?" smallzh":"")+'">'+w[0]+'</div>';
+  $("fjp").textContent = w[1];
+  $("fkana").textContent = kanaOf(w);
+  $("fzh").className = "zh" + (zhLong?" smallzh":"");
+  $("fzh").textContent = w[0];
+  $("fgroup").textContent = GROUP_LABEL[w[3]];
+  $("fgroup2").textContent = GROUP_LABEL[w[3]];
+  const known = knownSet.has(idOf(w));
+  $("fstar").textContent = known ? "⭐" : "";
+  $("fstar2").textContent = known ? "⭐" : "";
+  $("fmark").textContent = known ? "☆ 取消已記住" : "⭐ 標記已記住";
+  $("fknown").innerHTML = "已記住 <b>"+inRange().filter(x=>knownSet.has(idOf(x))).length+"</b>";
+  $("fprev").disabled = fidx===0;
+  $("fnext").textContent = fidx+1>=fdeck.length ? "✓" : "→";
+}
+function moveCard(d){
+  const n = fidx + d;
+  if(n < 0) return;
+  if(n >= fdeck.length){ showHome(); return; }
+  fidx = n;
+  loadCard();
+}
+function toggleKnown(){
+  const w = fdeck[fidx], id = idOf(w);
+  if(knownSet.has(id)) knownSet.delete(id); else knownSet.add(id);
+  saveSet(KKEY, knownSet);
+  loadCard();
+}
+
+/* ══════════ 選擇題測驗 ══════════ */
+let qdeck=[], qidx=0, qcorrect=0, qmode="zh2jp", qreview=false, qanswered=false, qopts=[];
+
+function startQuiz(mode, list){
+  const items = list && list.length ? list : inRange();
+  if(!items.length) return;
+  qmode = mode; qreview = !!(list && list.length);
+  qdeck = shuffle(items);
+  qidx = 0; qcorrect = 0;
+  $("qtotal").textContent = qdeck.length;
+  $("modeLabel").textContent = (qreview?"複習·":"") + MODE_LABEL[mode];
+  show("quiz");
+  loadQ();
+}
+function pickOptions(w){
+  const pool = WORDS.filter(x=>idOf(x)!==idOf(w));
+  const same = shuffle(pool.filter(x=>x[3]===w[3]));
+  const rest = shuffle(pool.filter(x=>x[3]!==w[3]));
+  const picked=[], seen=new Set([w[0], w[1]]);
+  for(const x of same.concat(rest)){
+    if(picked.length>=3) break;
+    if(seen.has(x[0]) || seen.has(x[1])) continue;   // 避免重複選項
+    seen.add(x[0]); seen.add(x[1]); picked.push(x);
+  }
+  return shuffle(picked.concat([w]));
+}
+function loadQ(){
+  qanswered = false;
+  const w = qdeck[qidx];
+  qopts = pickOptions(w);
+  $("qnum").textContent = qidx+1;
+  $("score").textContent = qcorrect;
+  $("qprog").style.width = (qidx/qdeck.length*100)+"%";
+  $("msg").className="msg"; $("msg").innerHTML="&nbsp;";
+  $("qnext").classList.add("hidden");
+
+  const listen = qmode==="listen";
+  $("qpic").textContent = qmode==="jp2zh" || listen ? "" : w[4];
+  $("qpic").style.display = ($("qpic").textContent ? "" : "none");
+  if(listen){
+    $("qtext").textContent = "🔊";
+    $("qtext").className = "q";
+    $("qsub").textContent = "聽讀音，選出正確的單字";
+    $("qspeak").classList.remove("hidden");
+    speak(w[2]);
+  }else if(qmode==="zh2jp"){
+    $("qtext").textContent = w[0];
+    $("qtext").className = "q" + (w[0].length>7 ? " long" : "");
+    $("qsub").textContent = "";
+    $("qspeak").classList.add("hidden");
+  }else{
+    $("qtext").textContent = w[1];
+    $("qtext").className = "q" + (w[1].length>7 ? " long" : "");
+    $("qsub").textContent = "";
+    $("qspeak").classList.remove("hidden");
+  }
+
+  const showJp = (qmode!=="jp2zh");
+  $("opts").innerHTML = qopts.map((x,i)=>{
+    const main = showJp ? x[1] : x[0];
+    const sub  = showJp ? kanaOf(x) : "";
+    return '<button class="opt" type="button" data-i="'+i+'">'+main+
+           (sub? '<small>'+sub+'</small>':'')+'</button>';
+  }).join("");
+  document.querySelectorAll("#opts .opt").forEach(b=>{
+    b.addEventListener("click", ()=> answer(parseInt(b.dataset.i,10)));
+  });
+}
+function answer(i){
+  if(qanswered) return;
+  qanswered = true;
+  const w = qdeck[qidx], picked = qopts[i];
+  const right = idOf(picked)===idOf(w);
+  const btns = [...document.querySelectorAll("#opts .opt")];
+  btns.forEach((b,j)=>{
+    b.disabled = true;
+    if(idOf(qopts[j])===idOf(w)) b.classList.add("ok");
+    else if(j===i) b.classList.add("bad");
+    else b.classList.add("dim");
+  });
+  if(right){
+    qcorrect++;
+    $("score").textContent = qcorrect;
+    $("msg").className="msg ok";
+    $("msg").textContent = "正確！ " + full(w);
+    if(wrongSet.delete(idOf(w))) saveSet(WKEY, wrongSet);
+  }else{
+    wrongFeedback();
+    wrongSet.add(idOf(w)); saveSet(WKEY, wrongSet);
+    $("msg").className="msg bad";
+    $("msg").textContent = "答錯了：" + w[0] + " = " + full(w);
+  }
+  if(qmode!=="jp2zh") speak(w[2]);
+  const nb = $("qnext");
+  nb.classList.remove("hidden");
+  nb.textContent = (qidx+1>=qdeck.length) ? "看結果 →" : "下一題 →";
+  nb.focus();
+}
+function nextQ(){
+  qidx++;
+  if(qidx>=qdeck.length){ finish(); return; }
+  loadQ();
+}
+function finish(){
+  show("result");
+  $("resultTitle").textContent = (qreview?"錯題重練":MODE_LABEL[qmode]+" 測驗") + "完成 🎉";
+  $("correctCount").textContent = qcorrect;
+  $("rtotal").textContent = qdeck.length;
+  const r = qdeck.length ? qcorrect/qdeck.length : 0;
+  let c;
+  if(qreview){
+    const left = wrongSet.size;
+    c = left===0 ? "錯題本清空了，全部攻克！🏆" : "還剩 "+left+" 個，再練一輪 💪";
+  }
+  else if(r===1) c="全對！太神啦 🏆";
+  else if(r>=0.9) c="超強，幾乎全對！💪";
+  else if(r>=0.7) c="很不錯，再拼全對 👍";
+  else if(r>=0.5) c="有基礎了，繼續練會更好 🔥";
+  else c="多練幾次一定會進步，加油！";
+  $("comment").textContent = c;
+}
+
+/* ── 錯題本 ── */
+function reviewList(){
+  const d=[];
+  for(const id of wrongSet){ const w=byId.get(id); if(w) d.push(w); }
+  return d;
+}
+
+/* ── 事件 ── */
+document.querySelectorAll(".choose[data-mode]").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    const m = b.dataset.mode;
+    if(m==="flash") startFlash(); else startQuiz(m);
+  });
+});
+$("selAll").addEventListener("click", ()=>{
+  GROUPS.forEach(([g])=>selectedGroups.add(g));
+  syncChips(); saveSet(GKEY, selectedGroups); updateRange();
+});
+$("selNone").addEventListener("click", ()=>{
+  selectedGroups.clear(); selectedGroups.add(GROUPS[0][0]);
+  syncChips(); saveSet(GKEY, selectedGroups); updateRange();
+});
+$("reviewBtn").addEventListener("click", ()=>{
+  const d = reviewList();
+  if(!d.length){ showHome(); return; }
+  startQuiz(qmode==="flash"?"zh2jp":"zh2jp", d);
+});
+$("clearWrong").addEventListener("click", ()=>{
+  if(confirm("確定清空錯題本？")){ wrongSet.clear(); saveSet(WKEY, wrongSet); updateRange(); }
+});
+$("clearKnown").addEventListener("click", ()=>{
+  if(confirm("確定清空所有「已記住」標記？")){ knownSet.clear(); saveSet(KKEY, knownSet); updateRange(); }
+});
+
+$("fc").addEventListener("click", ()=> $("fc").classList.toggle("flip"));
+$("fprev").addEventListener("click", ()=> moveCard(-1));
+$("fnext").addEventListener("click", ()=> moveCard(1));
+$("fspeak").addEventListener("click", ()=> speak(fdeck[fidx][2]));
+$("fmark").addEventListener("click", toggleKnown);
+$("fshuffle").addEventListener("click", ()=> startFlash(fdeck));
+$("fhome").addEventListener("click", showHome);
+
+$("qnext").addEventListener("click", nextQ);
+$("qspeak").addEventListener("click", ()=> speak(qdeck[qidx][2]));
+$("qhome").addEventListener("click", showHome);
+$("again").addEventListener("click", ()=>{
+  if(qreview){
+    const d = reviewList();
+    if(d.length){ startQuiz(qmode, d); return; }
+    showHome(); return;
+  }
+  startQuiz(qmode);
+});
+$("backHome").addEventListener("click", showHome);
+
+/* 鍵盤：單字卡用空白翻面、左右換卡；測驗用 1-4 選答、Enter 下一題 */
+document.addEventListener("keydown", e=>{
+  if(!$("flash").classList.contains("hidden")){
+    if(e.key===" "){ e.preventDefault(); $("fc").classList.toggle("flip"); }
+    else if(e.key==="ArrowRight") moveCard(1);
+    else if(e.key==="ArrowLeft") moveCard(-1);
+  }else if(!$("quiz").classList.contains("hidden")){
+    if(e.key==="Enter"){
+      e.preventDefault();
+      if(!e.repeat && !$("qnext").classList.contains("hidden")) nextQ();
+    }else if(/^[1-4]$/.test(e.key)){
+      const b = document.querySelector('#opts .opt[data-i="'+(parseInt(e.key,10)-1)+'"]');
+      if(b && !b.disabled) b.click();
+    }
+  }
+});
+
+/* 單字卡左右滑動 */
+(function swipe(){
+  const el = $("fc");
+  let x0=null, y0=null;
+  el.addEventListener("touchstart", e=>{
+    const t=e.changedTouches[0]; x0=t.clientX; y0=t.clientY;
+  }, {passive:true});
+  el.addEventListener("touchend", e=>{
+    if(x0===null) return;
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+    x0=null;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){
+      e.preventDefault();
+      moveCard(dx<0 ? 1 : -1);
+    }
+  });
+})();
+
+/* ── 啟動 ── */
+(function init(){
+  try{
+    const s = JSON.parse(localStorage.getItem(GKEY)||"null");
+    if(Array.isArray(s) && s.length){
+      selectedGroups.clear();
+      s.forEach(g=>{ if(GROUP_LABEL[g]) selectedGroups.add(g); });
+    }
+  }catch(e){}
+  if(selectedGroups.size===0) selectedGroups.add(GROUPS[0][0]);
+  renderChips(); syncChips();
+  if("speechSynthesis" in window){ try{ speechSynthesis.getVoices(); }catch(e){} }
+  showHome();
+})();
+</script>
